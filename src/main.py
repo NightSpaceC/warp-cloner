@@ -65,12 +65,20 @@ async def worker(id: int) -> None:
             with open(config.OUTPUT_FILE, 'a') as file:
                 file.write(output + '\n')
 
+        if id == 0:
+            break
+
         if signal_handler.KEEP_PROCESSING:
             await asyncio.sleep(config.DELAY)
 
 
 async def main() -> None:
     tasks = []
+
+    if config.THREADS_COUNT == 0:
+        tasks.append(
+            asyncio.create_task(worker(0))
+        )
 
     for i in range(config.THREADS_COUNT):
         tasks.append(
