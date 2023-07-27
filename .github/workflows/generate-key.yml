@@ -1,0 +1,39 @@
+name: Generate Warp Plus Key
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+
+jobs:
+  generate-key:
+    runs-on: ubuntu-latest
+    if: github.event.comment.body == '/g'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+
+      - name: Install dependence
+        run: pip install -r requirements.txt
+
+      - name: Generate
+        run: |
+          printf "BASE_KEYS=${{ secrets.BASE_KEYS }}
+                  THREADS_COUNT=0
+                  OUTPUT_FORMAT={key}
+                  RETRY_COUNT=0" > .env
+          for i in {1..${{ vars.NUM_PER_TIME }}}
+          do
+            python -u src/main.py
+          done
+
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body-path: output.txt
